@@ -70,3 +70,7 @@ Response (JSON, status_code = 201):
   "group": 0
 }
 ```
+<<<<<<< HEAD
+=======
+
+>>>>>>> e9882283977fa502130ed101e284d29e6ab2272c
