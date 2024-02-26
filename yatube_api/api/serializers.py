@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
-from posts.models import Comment, Follow, Group, Post
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+
+from posts.models import Comment, Follow, Group, Post
 
 User = get_user_model()
 
@@ -49,6 +50,8 @@ class FollowSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Вы не можете подписаться на самого себя')
 
+        # Используя UniqueTogetherValidator поле user становиться обязательным
+        # и всегда получаю 400 BadRequest
         try:
             Follow.objects.get(user=user, following=data['following'])
         except Follow.DoesNotExist:
