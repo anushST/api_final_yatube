@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueTogetherValidator
 
 from posts.models import Comment, Follow, Group, Post
 
@@ -34,7 +35,8 @@ class GrouptSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        read_only=True, slug_field='username',
+        default=serializers.CurrentUserDefault()
     )
     following = serializers.SlugRelatedField(
         slug_field='username', queryset=User.objects.all()
@@ -43,18 +45,16 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('user', 'following')
         model = Follow
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following')
+            )
+        ]
 
     def validate(self, data):
         user = self.context['request'].user
         if user == data['following']:
             raise serializers.ValidationError(
                 'Вы не можете подписаться на самого себя')
-
-        # Используя UniqueTogetherValidator поле user становиться обязательным
-        # и всегда получаю 400 BadRequest
-        try:
-            Follow.objects.get(user=user, following=data['following'])
-        except Follow.DoesNotExist:
-            return data
-        raise serializers.ValidationError(
-            'Вы уже подписанны на данного пользователя')
+        return super().validate(data)
